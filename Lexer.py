@@ -135,7 +135,7 @@ class Lexer:
                         Token["operator"].append(self.buffer) #Store it
                     self.counter += 1
                     self.emptyBuffer() #empty the buffer
-                    self.equalize()
+                    self.equalize() #Equalize pointers
                     self.scan()
                 elif (self.buffer in T_kw): #If the buffer string is a reserved word
                     if((self.buffer == "int" or self.buffer == "bool") and self.flag == 0):
@@ -146,7 +146,7 @@ class Lexer:
                         Token["keyword"].append(self.buffer) #Store it
                     self.counter += 1
                     self.emptyBuffer() #empty the buffer
-                    self.equalize()
+                    self.equalize() #Equalize pointers
                     self.scan()
                 else: #if the char is a letter and it is not a keyword, it is an identifier
                     if(not(self.buffer in symbolTable)and self.flag == 1):
@@ -156,7 +156,7 @@ class Lexer:
                         self.counter += 1
                         self.flag = 0
                         self.emptyBuffer() #empty the buffer
-                        self.equalize() #equalize the chars
+                        self.equalize() #Equalize pointers
                         self.scan() #Recursion
                     else:
                         self.throwError(", identifier used before assignment")
@@ -167,7 +167,7 @@ class Lexer:
                 self.counter += 1
                 self.emptyBuffer() #empty the buffer
                 self.Peek() #Advance the peekchar
-                self.equalize() #equalize the chars
+                self.equalize() #Equalize pointers
                 self.scan() #Recursion 
 
             elif(self.currentChar in T_op): #if the current chat is in ["+", "-", "/", "", "*", "^" , "|" , "~","<", ">", "<=", ">=", "==", "!=", "="] 
@@ -187,7 +187,7 @@ class Lexer:
                     if(not(self.currentChar in Token["operator"])): #if it isnt a two lenght operator
                         Token["operator"].append(self.currentChar)
                 self.emptyBuffer() #empty the buffer
-                self.equalize() #equalize the chars
+                self.equalize() #Equalize pointers
                 self.scan() #Recursion
 
             elif (self.currentChar in numbers): #If the lexeme begin a digit
@@ -198,7 +198,7 @@ class Lexer:
                     Token["constant"].append(self.buffer) #Store it
                 self.counter += 1
                 self.emptyBuffer() #empty the buffer
-                self.equalize() #equalize the chars
+                self.equalize() #Equalize pointers
                 self.scan() #Recursion  
 
         else:
