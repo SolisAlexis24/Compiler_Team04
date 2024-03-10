@@ -1,12 +1,10 @@
 @Esto es un comentario 
 
 int main{ 
-	int x=0;
-	bool x1=true;
-	if (x1==true){ 
-		x=x+1; 
-	}else{ 
-		x=x-1; 
-}
+	int x;
+	int a=2;
+	int b=3;
+	int c=4;
+	x=a+b*c;
 	return 0;
 } 

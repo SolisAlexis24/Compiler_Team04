@@ -6,7 +6,7 @@ Token = {"keyword":[], "identifier":[],  "operator":[], "constant":[], "puctuati
 global symbolTable
 symbolTable = {"if": None, "else":None}
 T_kw = ["int", "bool", "if", "else", "return", "true", "false"] #Token type keyword (RESERVED WORDS)
-T_op = ["+", "-", "/", "", "*", "^" , "|" , "~","<", ">", "<=", ">=", "==", "!=", "="] #Token type operator
+T_op = ["+", "-", "/", "**", "*", "^" , "|" , "~","<", ">", "<=", ">=", "==", "!=", "="] #Token type operator
 T_punct = [";", "(", ")", "{", "}"] #Token type punctuation
 Comment = "@" #Comment
 numbers = "0123456789"
@@ -26,15 +26,15 @@ def codeGetter():
                 code = code + line #Open the file and line by line, it reads the content and concatenate each line onto the string "code"
 
 class Lexer:
-    def __init__(self):
-        self.codeString = code #Set the string to analize as the code that the function "codeGetter" gets
+    def __init__(self, codeIn):
+        self.codeString = codeIn #Set the string to analize as the code that the function "codeGetter" gets
         self.currentPos = -1 #The initial position for the lexer is -1 (The method advance will update this inmediatly)
         self.peekPos = -1
         self.currentChar = None #The initial char of the lexer is None (The method advance will update this inmediatly)
         self.peekChar = None 
         self.line = 1
         self.buffer = ""
-        self.flag = 0
+        self.flag = 0 #flag that indicates the incoming operation: 0=nothing, 1=Declaration
         self.pile = []
         self.counter = 0
 
@@ -149,7 +149,7 @@ class Lexer:
                     self.equalize() #Equalize pointers
                     self.scan()
                 else: #if the char is a letter and it is not a keyword, it is an identifier
-                    if(not(self.buffer in symbolTable)and self.flag == 1):
+                    if(not(self.buffer in symbolTable) and self.flag == 1):
                         if(not(self.buffer in Token["identifier"])): #if it is not stored already
                             Token["identifier"].append(self.buffer) #Store it
                             symbolTable[self.buffer]=self.line
@@ -158,9 +158,14 @@ class Lexer:
                         self.emptyBuffer() #empty the buffer
                         self.equalize() #Equalize pointers
                         self.scan() #Recursion
-                    else:
+                    elif(not(self.buffer in symbolTable) and self.flag == 0):
                         self.throwError(", identifier used before assignment")
-
+                    else:
+                        self.counter += 1
+                        self.flag = 0
+                        self.emptyBuffer() #empty the buffer
+                        self.equalize() #Equalize pointers
+                        self.scan() #Recursion
             elif (self.currentChar in T_punct):
                 if (not(self.currentChar in Token["puctuation"])): #if it is not stored already
                     Token["puctuation"].append(self.currentChar) #Store it
@@ -202,7 +207,7 @@ class Lexer:
                 self.scan() #Recursion  
 
         else:
-            self.throwError(", character" + self.currentChar + ", is not a language symbol")
+            return
 
 
     def throwError(self, errorMesage):
@@ -212,7 +217,7 @@ class Lexer:
 
 
 codeGetter()
-Lexer1 = Lexer()
+Lexer1 = Lexer(code)
 Lexer1.advanceCurrent()
 Lexer1.Peek()
 Lexer1.scan()
