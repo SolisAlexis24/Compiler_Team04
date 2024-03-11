@@ -8,6 +8,7 @@ symbolTable = {"if": None, "else":None}
 T_kw = ["int", "bool", "if", "else", "return", "true", "false"] #Token type keyword (RESERVED WORDS)
 T_op = ["+", "-", "/", "**", "*", "^" , "|" , "~","<", ">", "<=", ">=", "==", "!=", "="] #Token type operator
 T_punct = [";", "(", ")", "{", "}"] #Token type punctuation
+T_op2 = ["<=", ">=", "==", "!=", "**"] #Token type operator 2 lenght
 Comment = "@" #Comment
 numbers = "0123456789"
 letters = "abcdefghijklmnopqrstuvwxyz"
@@ -31,12 +32,12 @@ class Lexer:
         self.currentPos = -1 #The initial position for the lexer is -1 (The method advance will update this inmediatly)
         self.peekPos = -1
         self.currentChar = None #The initial char of the lexer is None (The method advance will update this inmediatly)
-        self.peekChar = None 
-        self.line = 1
-        self.buffer = ""
-        self.flag = 0 #flag that indicates the incoming operation: 0=nothing, 1=Declaration
-        self.pile = []
-        self.counter = 0
+        self.peekChar = None #Char inmediatly after the current char
+        self.line = 1 #Line where the lexer is analyzing
+        self.buffer = "" # Buffer for scan ahead operations
+        self.flag = 0 #flag that indicates the incoming operation: 0=nothing, 1=Declaration, 2 = signed number
+        self.counter = 0 #Token counter
+        self.SignBuf = "" #Buffer for the signed numbers
 
     def advanceCurrent(self):
         """this method made the current char advance a space"""
@@ -63,6 +64,10 @@ class Lexer:
         """This method empty the buffer"""
         self.buffer = ""
 
+    def emptySign(self):
+        """This method empty the sign buffer for those signed numbers"""
+        self.SignBuf = ""
+
     def advance_eol(self):
         """This method advance untill it found the end of line"""
         while(self.peekChar != "\n"):
@@ -87,24 +92,6 @@ class Lexer:
         print(table)
 
 
-    def scan(self):
-        if (self.peekChar != None): #Executes until reach the eof
-            if (self.peekChar == " " or self.peekChar =="\t"): #The peek char looks forward if the char is a non-imprimible char.
-                self.Peek() #Moves forward the peekchar
-                self.equalize() #Equalize the both pointers
-                self.scan() #Recursion
-
-            elif (self.peekChar == Comment): #If detects the beginning of a coment 
-                self.advance_eol() #Advance until the end of the line
-                self.line += 1
-                self.equalize() #Equalize the both pointers
-                self.scan() #Recursion
-
-            elif(self.peekChar == "\n"):
-                self.line += 1
-                self.Peek() #Moves forward the peekchar
-                self.equalize() #Equalize the both pointers
-                self.scan() #Recursion
 
     def scan(self):
         if (self.peekChar != None): #Executes until reach the eof
@@ -115,7 +102,6 @@ class Lexer:
 
             elif (self.peekChar == Comment): #If detects the beginning of a coment 
                 self.advance_eol() #Advance until the end of the line
-                self.Peek() #Advance again to be in the next line
                 self.line += 1 #Increment the atribute line
                 self.equalize() #Equalize pointers
                 self.scan() #Recursion
@@ -175,34 +161,33 @@ class Lexer:
                 self.equalize() #Equalize pointers
                 self.scan() #Recursion 
 
-            elif(self.currentChar in T_op): #if the current chat is in ["+", "-", "/", "", "*", "^" , "|" , "~","<", ">", "<=", ">=", "==", "!=", "="] 
-                self.counter += 1 #Found a token
-                self.Peek() #Peek to see if it is a two length token
-                if(self.peekChar in T_op): #if it is
-                    if(self.peekChar == "+" or self.peekChar == "-"): #if the following is a sign it could be a number
-                        if(not(self.currentChar in Token["operator"])):
-                            Token["operator"].append(self.currentChar)
-                        self.Peek()
-                    else:
-                        self.buffer = self.currentChar + self.peekChar
-                        if(not(self.buffer in Token["operator"])):
-                            Token["operator"].append(self.buffer)
-                        self.Peek()
+            elif(self.currentChar in T_op): #if the current chat is in ["+", "-", "/", "**", "*", "^" , "|" , "~","<", ">", "<=", ">=", "==", "!=", "="]
+                self.Peek() #scan ahead
+                self.buffer = self.currentChar + self.peekChar #Buffer operation to see if the token is two char length
+                if (self.buffer in T_op2): #if it is
+                    if (not(self.buffer in Token["operator"])): #if it is not stored already
+                        Token["operator"].append(self.buffer) #Store it
+                    self.Peek() #Advance to the next char, because if it were two char length, the peek is on the second char of the second char
+                elif (self.peekChar in numbers and (self.currentChar == "+" or self.currentChar == "-")): #if the following char is a number and the current is a sign, it is a signed number
+                    if(not(self.currentChar) in Token["operator"]): #if the "+" or "-" is not still stored
+                        Token["operator"].append(self.currentChar) #Store it
+                    self.SignBuf = self.currentChar #Get the sign
                 else:
-                    if(not(self.currentChar in Token["operator"])): #if it isnt a two lenght operator
-                        Token["operator"].append(self.currentChar)
+                    if(not(self.currentChar) in Token["operator"]): #other case, just store the lexeme
+                        Token["operator"].append(self.currentChar) #Store it
+                self.counter += 1
                 self.emptyBuffer() #empty the buffer
                 self.equalize() #Equalize pointers
-                self.scan() #Recursion
+                self.scan() #Recursion 
 
             elif (self.currentChar in numbers): #If the lexeme begin a digit
                 while(self.peekChar in numbers): #moves the peekChar until it found a whitespace
-                    self.buffer += self.peekChar #Store the chain onto a buffer
+                    self.SignBuf += self.peekChar #Store the chain onto a buffer
                     self.Peek() #Advance
-                if (not(self.buffer in Token["constant"])): #if it is not stored already
-                    Token["constant"].append(self.buffer) #Store it
-                self.counter += 1
-                self.emptyBuffer() #empty the buffer
+                if (not(int(self.SignBuf) in Token["constant"])): #if it is not stored already
+                    Token["constant"].append(int(self.SignBuf)) #Store it
+                self.counter += 1 
+                self.emptySign() #empty the sign buffer
                 self.equalize() #Equalize pointers
                 self.scan() #Recursion  
 
@@ -222,3 +207,4 @@ Lexer1.advanceCurrent()
 Lexer1.Peek()
 Lexer1.scan()
 Lexer1.printTokens()
+print(symbolTable)
