@@ -9,6 +9,13 @@
 * Solis Hernández Ian Alexis 
 
 ### Instructions to execute de code
+You need to have Python installed on your computer to be able to run the code.
+
+If you don't have the library **_prettytable_** you need to install the library with the following command:
+
+**_pip install -U prettytable_**
+
+
 #### For Windows
 Excute de code using the command **_python Lexer.py code.xd_**
 #### For Linux
