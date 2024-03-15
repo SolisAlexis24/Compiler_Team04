@@ -15,6 +15,7 @@ If you don't have the library **_prettytable_** you need to install the library 
 
 **_pip install -U prettytable_**
 
+Then open a terminal and move to the folder in which the files are located
 
 #### For Windows
 Excute de code using the command **_python Lexer.py code.xd_**
